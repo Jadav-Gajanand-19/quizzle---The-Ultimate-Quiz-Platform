@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Styled Quiz App</title>
+    <style>
+        body { 
+            background-image: url('quizlet.jpg');
+            font-family: 'Trebuchet MS', Arial, sans-serif; 
+            text-align: center; 
+            padding: 20px; 
+        }
+        .questions-box {
+            font-size: x-large;
+            width: 50%;
+            height: auto;
+            margin: auto;
+            border: 2px solid black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.1);
+            transition: background 0.5s ease;
+        }
+        .time-over {
+            background-color: red !important;
+        }
+        .question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .options-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .option {
+            display: block;
+            background-color: white;
+            padding: 10px;
+            width: 80%;
+            text-align: left;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        .option:hover {
+            background-color: #dfe6e9;
+        }
+        .selected {
+            background-color: #74b9ff;
+            color: white;
+        }
+        .next-btn, .restart-btn, .home-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #0984e3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: 0.3s ease;
+        }
+        .next-btn:hover, .restart-btn:hover, .home-btn:hover {
+            background-color: #0652DD;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1 style="color: #f8f9fa;">Quizzle - The Ultimate Quiz Platform!</h1>
+    <div class="questions-box" id="quiz-container">
+        <p class="timer" id="timer" style="color: red;">Time Left: 10s</p>
+        <div id="quiz"></div>
+        <button class="next-btn hidden" onclick="nextQuestion()">Next</button>
+        <button class="restart-btn hidden" onclick="restartQuiz()">Restart Quiz</button>
+        <button class="home-btn hidden" onclick="goHome()">Go Home</button>
+        <p id="result" class="result"></p>
+    </div>
+
+    <script>
+        const questions = [
+    { question: "What does HTML stand for?", options: ["Hyper Text Markup Language", "High Tech Modern Language", "Hyperlink and Text Markup Language", "Home Tool Markup Language"], answer: "Hyper Text Markup Language" },
+    { question: "Which HTML tag is used to define a hyperlink?", options: ["<a>", "<link>", "<href>", "<hyper>"], answer: "<a>" },
+    { question: "What is the correct structure of an HTML document?", options: ["<html><head><title></title><body></body></html>", "<head><html><body></body></head></html>", "<html><body><head></head></body></html>", "<html><title></title><head><body></body></head></html>"], answer: "<html><head><title></title><body></body></html>" },
+    { question: "Which tag is used to create a line break in HTML?", options: ["<br>", "<break>", "<lb>", "<newline>"], answer: "<br>" },
+    { question: "Which HTML element is used to define an unordered list?", options: ["<ul>", "<ol>", "<li>", "<list>"], answer: "<ul>" },
+    { question: "Which attribute is used to specify an image source?", options: ["src", "href", "alt", "link"], answer: "src" },
+    { question: "What is the default font size of text in an HTML document?", options: ["16px", "12px", "14px", "18px"], answer: "16px" },
+    { question: "Which tag is used to define a table row?", options: ["<tr>", "<td>", "<th>", "<table-row>"], answer: "<tr>" },
+    { question: "Which attribute is used to define inline CSS?", options: ["style", "css", "font", "design"], answer: "style" },
+    { question: "Which tag is used for the largest heading in HTML?", options: ["<h6>", "<h3>", "<h1>", "<head>"], answer: "<h1>" },
+    { question: "Which HTML element is used to define a paragraph?", options: ["<p>", "<para>", "<text>", "<pg>"], answer: "<p>" },
+    { question: "Which attribute is used to uniquely identify an HTML element?", options: ["id", "class", "name", "key"], answer: "id" },
+    { question: "What does the alt attribute in an <img> tag provide?", options: ["Alternate text for an image", "Image width", "Image height", "Image link"], answer: "Alternate text for an image" },
+    { question: "Which tag is used to create a form in HTML?", options: ["<form>", "<input>", "<textarea>", "<fieldset>"], answer: "<form>" },
+    { question: "Which tag is used to define metadata about an HTML document?", options: ["<meta>", "<script>", "<link>", "<style>"], answer: "<meta>" },
+    { question: "Which element is used to create a dropdown list in HTML?", options: ["<select>", "<dropdown>", "<list>", "<option>"], answer: "<select>" },
+    { question: "Which tag is used to embed a video in HTML?", options: ["<video>", "<media>", "<embed>", "<movie>"], answer: "<video>" },
+    { question: "Which tag is used to define a division or section in HTML?", options: ["<div>", "<section>", "<article>", "<container>"], answer: "<div>" },
+    { question: "Which HTML element is used to display a horizontal line?", options: ["<hr>", "<line>", "<br>", "<hl>"], answer: "<hr>" },
+    { question: "Which tag is used to add an external JavaScript file to an HTML document?", options: ["<script>", "<js>", "<link>", "<javascript>"], answer: "<script>" }
+];
+
+
+
+        let currentQuestion = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 10;
+
+        function loadQuiz() {
+            clearInterval(timer); 
+            timeLeft = 10; 
+            updateTimerDisplay();
+            startTimer();
+
+            document.getElementById("timer").classList.remove("hidden");
+            const quizDiv = document.getElementById("quiz");
+            const nextBtn = document.querySelector(".next-btn");
+            const restartBtn = document.querySelector(".restart-btn");
+            const homeBtn = document.querySelector(".home-btn");
+            quizDiv.innerHTML = '';
+
+            if (currentQuestion < questions.length) {
+                const q = questions[currentQuestion];
+                quizDiv.innerHTML = `<div class="question">${currentQuestion + 1}. ${q.question}</div>`;
+
+                const optionsContainer = document.createElement("div");
+                optionsContainer.className = "options-container";
+
+                q.options.forEach(option => {
+                    let optionDiv = document.createElement("div");
+                    optionDiv.className = "option";
+                    optionDiv.innerText = option;
+                    optionDiv.setAttribute("data-value", option);
+                    optionDiv.onclick = function() { selectAnswer(optionDiv, option); };
+                    optionsContainer.appendChild(optionDiv);
+                });
+
+                quizDiv.appendChild(optionsContainer);
+                nextBtn.classList.add("hidden");
+                restartBtn.classList.add("hidden");
+                homeBtn.classList.add("hidden");
+            } else {
+                document.getElementById("timer").classList.add("hidden");
+                document.getElementById("result").innerText = `Your score: ${score} / ${questions.length}`;
+                restartBtn.classList.remove("hidden");
+                homeBtn.classList.remove("hidden");
+                nextBtn.classList.add("hidden");
+            }
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    timeExpired();
+                }
+            }, 1000);
+        }
+
+        function timeExpired() {
+            const quizContainer = document.getElementById("quiz-container");
+            quizContainer.classList.add("time-over");
+            setTimeout(() => {
+                quizContainer.classList.remove("time-over");
+                nextQuestion();
+            }, 2000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById("timer").innerText = `Time Left: ${timeLeft}s`;
+        }
+
+        function selectAnswer(optionDiv, selected) {
+            clearInterval(timer);
+            document.querySelectorAll(".option").forEach(opt => opt.classList.remove("selected"));
+            optionDiv.classList.add("selected");
+
+            if (selected === questions[currentQuestion].answer) {
+                score++;
+            }
+
+            document.querySelector(".next-btn").classList.remove("hidden");
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            loadQuiz();
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById("result").innerText = "";
+            loadQuiz();
+        }
+
+        function goHome() {
+            window.location.href = "quizzle_home.html";
+        }
+
+        window.onload = loadQuiz;
+    </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizzle - Home & Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-image: url('quizlet.jpg');
+            background-size: cover;
+            background-position: center;
+            padding: 20px;
+        }
+        .container {
+            width: 50%;
+            margin: auto;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            color: #333;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .btn {
+            background-color: #0984e3;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #0652DD;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Quizzle!</h1>
+        <p>The Ultimate Quiz Platform</p>
+        <h2>Login/Signup</h2>
+        <input type="text" id="username" placeholder="Enter your username">
+        <br>
+        <input type="text" id="password" placeholder="Enter your password">
+        <br>
+        <button class="btn" onclick="login()">Login</button>
+    </div>
+    
+    <script>
+        function login() {
+            let username = document.getElementById("username").value;
+            if (username.trim() === "") {
+                alert("Please enter a username to continue.");
+                return;
+            }
+            localStorage.setItem("username", username);
+            window.location.href = "quizzle_home.html";
+        }
+    </script>
+</body>
+</html>

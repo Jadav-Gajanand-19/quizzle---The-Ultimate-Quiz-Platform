@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Styled Quiz App</title>
+    <style>
+        body { 
+            background-image: url('quizlet.jpg');
+            font-family: 'Trebuchet MS', Arial, sans-serif; 
+            text-align: center; 
+            padding: 20px; 
+        }
+        .questions-box {
+            font-size: x-large;
+            width: 50%;
+            height: auto;
+            margin: auto;
+            border: 2px solid black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.1);
+            transition: background 0.5s ease;
+        }
+        .time-over {
+            background-color: red !important;
+        }
+        .question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .options-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .option {
+            display: block;
+            background-color: white;
+            padding: 10px;
+            width: 80%;
+            text-align: left;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        .option:hover {
+            background-color: #dfe6e9;
+        }
+        .selected {
+            background-color: #74b9ff;
+            color: white;
+        }
+        .next-btn, .restart-btn, .home-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #0984e3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: 0.3s ease;
+        }
+        .next-btn:hover, .restart-btn:hover, .home-btn:hover {
+            background-color: #0652DD;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1 style="color: #f8f9fa;">Quizzle - The Ultimate Quiz Platform!</h1>
+    <div class="questions-box" id="quiz-container">
+        <p class="timer" id="timer" style="color: red;">Time Left: 10s</p>
+        <div id="quiz"></div>
+        <button class="next-btn hidden" onclick="nextQuestion()">Next</button>
+        <button class="restart-btn hidden" onclick="restartQuiz()">Restart Quiz</button>
+        <button class="home-btn hidden" onclick="goHome()">Go Home</button>
+        <p id="result" class="result"></p>
+    </div>
+
+    <script>
+        const questions = [
+    { question: "What is the correct way to declare a variable in JavaScript?", options: ["var x = 10;", "let x = 10;", "const x = 10;", "All of the above"], answer: "All of the above" },
+    { question: "Which keyword is used to define a constant variable?", options: ["var", "let", "const", "static"], answer: "const" },
+    { question: "How do you write a single-line comment in JavaScript?", options: ["// This is a comment", "/* This is a comment */", "-- This is a comment", "# This is a comment"], answer: "// This is a comment" },
+    { question: "Which built-in function is used to convert a string to an integer?", options: ["parseInt()", "Number()", "parseFloat()", "toInteger()"], answer: "parseInt()" },
+    { question: "What will 'typeof null' return?", options: ["null", "undefined", "object", "string"], answer: "object" },
+    { question: "Which function is used to execute a function after a specified time interval?", options: ["setTimeout()", "setInterval()", "delay()", "wait()"], answer: "setTimeout()" },
+    { question: "How do you check if a variable is an array?", options: ["typeof x === 'array'", "x instanceof Array", "Array.isArray(x)", "Both B and C"], answer: "Both B and C" },
+    { question: "Which operator is used for strict equality comparison?", options: ["==", "===", "=", "!="], answer: "===" },
+    { question: "What will 'console.log(2 + '2')' output?", options: ["4", "22", "TypeError", "NaN"], answer: "22" },
+    { question: "Which method removes the last element from an array?", options: ["pop()", "shift()", "splice()", "remove()"], answer: "pop()" },
+    { question: "Which loop executes at least once regardless of the condition?", options: ["for", "while", "do...while", "foreach"], answer: "do...while" },
+    { question: "Which JavaScript data type is not primitive?", options: ["Number", "String", "Object", "Boolean"], answer: "Object" },
+    { question: "What is the output of 'console.log(typeof NaN)'?", options: ["NaN", "number", "undefined", "string"], answer: "number" },
+    { question: "Which method adds a new element to the end of an array?", options: ["push()", "unshift()", "append()", "concat()"], answer: "push()" },
+    { question: "How do you declare an arrow function?", options: ["function() => {}", "() => {}", "=> () {}", "func => {}"], answer: "() => {}" },
+    { question: "Which method converts an array into a string?", options: ["toString()", "join()", "concat()", "Both A and B"], answer: "Both A and B" },
+    { question: "Which function is used to iterate over an array?", options: ["forEach()", "map()", "filter()", "All of the above"], answer: "All of the above" },
+    { question: "What does 'JSON' stand for?", options: ["JavaScript Object Notation", "Java System Object Naming", "JavaScript Oriented Notation", "None of the above"], answer: "JavaScript Object Notation" },
+    { question: "Which object method is used to merge two objects?", options: ["Object.assign()", "Object.merge()", "Object.concat()", "Object.append()"], answer: "Object.assign()" },
+    { question: "How do you handle errors in JavaScript?", options: ["try...catch", "errorHandler()", "onError()", "catchError()"], answer: "try...catch" }
+];
+
+
+
+        let currentQuestion = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 10;
+
+        function loadQuiz() {
+            clearInterval(timer); 
+            timeLeft = 10; 
+            updateTimerDisplay();
+            startTimer();
+
+            document.getElementById("timer").classList.remove("hidden");
+            const quizDiv = document.getElementById("quiz");
+            const nextBtn = document.querySelector(".next-btn");
+            const restartBtn = document.querySelector(".restart-btn");
+            const homeBtn = document.querySelector(".home-btn");
+            quizDiv.innerHTML = '';
+
+            if (currentQuestion < questions.length) {
+                const q = questions[currentQuestion];
+                quizDiv.innerHTML = `<div class="question">${currentQuestion + 1}. ${q.question}</div>`;
+
+                const optionsContainer = document.createElement("div");
+                optionsContainer.className = "options-container";
+
+                q.options.forEach(option => {
+                    let optionDiv = document.createElement("div");
+                    optionDiv.className = "option";
+                    optionDiv.innerText = option;
+                    optionDiv.setAttribute("data-value", option);
+                    optionDiv.onclick = function() { selectAnswer(optionDiv, option); };
+                    optionsContainer.appendChild(optionDiv);
+                });
+
+                quizDiv.appendChild(optionsContainer);
+                nextBtn.classList.add("hidden");
+                restartBtn.classList.add("hidden");
+                homeBtn.classList.add("hidden");
+            } else {
+                document.getElementById("timer").classList.add("hidden");
+                document.getElementById("result").innerText = `Your score: ${score} / ${questions.length}`;
+                restartBtn.classList.remove("hidden");
+                homeBtn.classList.remove("hidden");
+                nextBtn.classList.add("hidden");
+            }
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    timeExpired();
+                }
+            }, 1000);
+        }
+
+        function timeExpired() {
+            const quizContainer = document.getElementById("quiz-container");
+            quizContainer.classList.add("time-over");
+            setTimeout(() => {
+                quizContainer.classList.remove("time-over");
+                nextQuestion();
+            }, 2000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById("timer").innerText = `Time Left: ${timeLeft}s`;
+        }
+
+        function selectAnswer(optionDiv, selected) {
+            clearInterval(timer);
+            document.querySelectorAll(".option").forEach(opt => opt.classList.remove("selected"));
+            optionDiv.classList.add("selected");
+
+            if (selected === questions[currentQuestion].answer) {
+                score++;
+            }
+
+            document.querySelector(".next-btn").classList.remove("hidden");
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            loadQuiz();
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById("result").innerText = "";
+            loadQuiz();
+        }
+
+        function goHome() {
+            window.location.href = "quizzle_home.html";
+        }
+
+        window.onload = loadQuiz;
+    </script>
+</body>
+</html>

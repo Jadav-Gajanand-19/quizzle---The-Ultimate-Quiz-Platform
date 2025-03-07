@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Styled Quiz App</title>
+    <style>
+        body { 
+            background-image: url('quizlet.jpg');
+            font-family: 'Trebuchet MS', Arial, sans-serif; 
+            text-align: center; 
+            padding: 20px; 
+        }
+        .questions-box {
+            font-size: x-large;
+            width: 50%;
+            height: auto;
+            margin: auto;
+            border: 2px solid black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.1);
+            transition: background 0.5s ease;
+        }
+        .time-over {
+            background-color: red !important;
+        }
+        .question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .options-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .option {
+            display: block;
+            background-color: white;
+            padding: 10px;
+            width: 80%;
+            text-align: left;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        .option:hover {
+            background-color: #dfe6e9;
+        }
+        .selected {
+            background-color: #74b9ff;
+            color: white;
+        }
+        .next-btn, .restart-btn, .home-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #0984e3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: 0.3s ease;
+        }
+        .next-btn:hover, .restart-btn:hover, .home-btn:hover {
+            background-color: #0652DD;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1 style="color: #f8f9fa;">Quizzle - The Ultimate Quiz Platform!</h1>
+    <div class="questions-box" id="quiz-container">
+        <p class="timer" id="timer" style="color: red;">Time Left: 10s</p>
+        <div id="quiz"></div>
+        <button class="next-btn hidden" onclick="nextQuestion()">Next</button>
+        <button class="restart-btn hidden" onclick="restartQuiz()">Restart Quiz</button>
+        <button class="home-btn hidden" onclick="goHome()">Go Home</button>
+        <p id="result" class="result"></p>
+    </div>
+
+    <script>
+        const questions = [
+    { question: "What does CSS stand for?", options: ["Cascading Style Sheets", "Computer Styled Sections", "Creative Style System", "Colorful Style Sheets"], answer: "Cascading Style Sheets" },
+    { question: "Which property is used to change text color in CSS?", options: ["color", "text-color", "font-color", "background-color"], answer: "color" },
+    { question: "Which CSS property is used to change the background color?", options: ["background-color", "bgcolor", "color-background", "background"], answer: "background-color" },
+    { question: "How do you apply styles to an element using an ID in CSS?", options: ["#id", ".id", "id:", "*id"], answer: "#id" },
+    { question: "Which CSS unit is relative to the font-size of the root element?", options: ["em", "rem", "px", "%"], answer: "rem" },
+    { question: "Which CSS property is used to make text bold?", options: ["font-weight", "text-style", "bold", "font-bold"], answer: "font-weight" },
+    { question: "Which property is used to align text to the center?", options: ["text-align", "align", "text-center", "center"], answer: "text-align" },
+    { question: "Which display property makes an element invisible but still takes up space?", options: ["display: none;", "visibility: hidden;", "opacity: 0;", "hidden"], answer: "visibility: hidden;" },
+    { question: "Which CSS selector is used to target all elements?", options: ["*", "#", ".", "all"], answer: "*" },
+    { question: "Which property is used to add space between elements?", options: ["margin", "padding", "spacing", "border"], answer: "margin" },
+    { question: "Which CSS property controls the transparency of an element?", options: ["opacity", "visibility", "transparent", "filter"], answer: "opacity" },
+    { question: "Which CSS property is used to create rounded corners?", options: ["border-radius", "corner-radius", "roundness", "border"], answer: "border-radius" },
+    { question: "Which CSS property is used to change the font of an element?", options: ["font-family", "text-font", "font-style", "font"], answer: "font-family" },
+    { question: "Which value of the position property places an element relative to its normal position?", options: ["relative", "absolute", "fixed", "sticky"], answer: "relative" },
+    { question: "Which property is used to control the spacing between lines of text?", options: ["line-height", "letter-spacing", "text-spacing", "text-height"], answer: "line-height" },
+    { question: "Which pseudo-class is used to style an element when hovered over?", options: [":hover", ":focus", ":active", ":checked"], answer: ":hover" },
+    { question: "Which property allows an element to be resized by the user?", options: ["resize", "overflow", "scale", "transform"], answer: "resize" },
+    { question: "Which CSS property is used to specify the width of an element's border?", options: ["border-width", "border-size", "border-thickness", "border"], answer: "border-width" },
+    { question: "Which CSS property is used to make a flex container?", options: ["display: flex;", "flex-box", "flex-wrap", "grid"], answer: "display: flex;" },
+    { question: "Which property is used to make an element stick to the top of the page when scrolling?", options: ["position: fixed;", "position: sticky;", "position: absolute;", "position: relative;"], answer: "position: sticky;" }
+];
+
+
+        let currentQuestion = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 10;
+
+        function loadQuiz() {
+            clearInterval(timer); 
+            timeLeft = 10; 
+            updateTimerDisplay();
+            startTimer();
+
+            document.getElementById("timer").classList.remove("hidden");
+            const quizDiv = document.getElementById("quiz");
+            const nextBtn = document.querySelector(".next-btn");
+            const restartBtn = document.querySelector(".restart-btn");
+            const homeBtn = document.querySelector(".home-btn");
+            quizDiv.innerHTML = '';
+
+            if (currentQuestion < questions.length) {
+                const q = questions[currentQuestion];
+                quizDiv.innerHTML = `<div class="question">${currentQuestion + 1}. ${q.question}</div>`;
+
+                const optionsContainer = document.createElement("div");
+                optionsContainer.className = "options-container";
+
+                q.options.forEach(option => {
+                    let optionDiv = document.createElement("div");
+                    optionDiv.className = "option";
+                    optionDiv.innerText = option;
+                    optionDiv.setAttribute("data-value", option);
+                    optionDiv.onclick = function() { selectAnswer(optionDiv, option); };
+                    optionsContainer.appendChild(optionDiv);
+                });
+
+                quizDiv.appendChild(optionsContainer);
+                nextBtn.classList.add("hidden");
+                restartBtn.classList.add("hidden");
+                homeBtn.classList.add("hidden");
+            } else {
+                document.getElementById("timer").classList.add("hidden");
+                document.getElementById("result").innerText = `Your score: ${score} / ${questions.length}`;
+                restartBtn.classList.remove("hidden");
+                homeBtn.classList.remove("hidden");
+                nextBtn.classList.add("hidden");
+            }
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    timeExpired();
+                }
+            }, 1000);
+        }
+
+        function timeExpired() {
+            const quizContainer = document.getElementById("quiz-container");
+            quizContainer.classList.add("time-over");
+            setTimeout(() => {
+                quizContainer.classList.remove("time-over");
+                nextQuestion();
+            }, 2000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById("timer").innerText = `Time Left: ${timeLeft}s`;
+        }
+
+        function selectAnswer(optionDiv, selected) {
+            clearInterval(timer);
+            document.querySelectorAll(".option").forEach(opt => opt.classList.remove("selected"));
+            optionDiv.classList.add("selected");
+
+            if (selected === questions[currentQuestion].answer) {
+                score++;
+            }
+
+            document.querySelector(".next-btn").classList.remove("hidden");
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            loadQuiz();
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById("result").innerText = "";
+            loadQuiz();
+        }
+
+        function goHome() {
+            window.location.href = "quizzle_home.html";
+        }
+
+        window.onload = loadQuiz;
+    </script>
+</body>
+</html>
