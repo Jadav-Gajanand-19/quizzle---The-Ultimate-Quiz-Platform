@@ -8,3 +8,5 @@ Technology Stack
 HTML
 CSS
 JavaScript (likely used for interactive quiz functionality)
+
+try it yourself : https://jadav-gajanand-19.github.io/quizzle---The-Ultimate-Quiz-Platform/
